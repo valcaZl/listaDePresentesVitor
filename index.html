@@ -137,7 +137,11 @@
       background: var(--surface); border: 1px solid var(--accent); border-radius: 14px; padding: 10px 12px 10px 16px;
       box-shadow: 0 8px 30px rgba(0,0,0,.3); font-size: .875rem;
     }
-    .editbar[hidden] { display: none; }
+    .editbar[hidden], .editbar input[hidden] { display: none; }
+    .editbar input {
+      flex: 1; min-width: 0; font: inherit; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--accent); background: var(--chip); color: var(--ink);
+    }
     .editbar .btn { flex-shrink: 0; border: 0; cursor: pointer; font: inherit; font-weight: 600; }
     body.editando main { padding-bottom: 90px; }
     @media (max-width: 520px) { .editbar { flex-direction: column; align-items: stretch; } }
@@ -166,6 +170,7 @@
 
   <div class="editbar" id="editbar" hidden>
     <span id="editmsg">✏️ Modo de edição — marque favoritos e escreva como quer cada produto.</span>
+    <input type="password" id="tokenInput" placeholder="Cole aqui o token do GitHub (github_pat_...)" autocomplete="off" hidden>
     <button type="button" class="btn" id="publicar">Publicar para todos</button>
   </div>
 
@@ -254,10 +259,12 @@
     const msg = document.getElementById("editmsg");
 
     document.getElementById("publicar").addEventListener("click", async () => {
-      let token = ls.get(TOKEN);
+      const campo = document.getElementById("tokenInput");
+      let token = ls.get(TOKEN) || campo.value.trim();
       if (!token) {
-        token = (prompt("Cole seu token do GitHub (só precisa fazer isso uma vez neste aparelho):") || "").trim();
-        if (!token) return;
+        campo.hidden = false; campo.focus();
+        msg.textContent = "Cole o token no campo ao lado e clique em Publicar de novo.";
+        return;
       }
       const api = `https://api.github.com/repos/${REPO}/contents/produtos.js`;
       const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" };
@@ -269,7 +276,7 @@
         const r = await fetch(api, { method: "PUT", headers, body: JSON.stringify({
           message: "Atualiza favoritos e comentários pelo site", content: b64(gerarArquivo()), sha, branch: "main" }) });
         if (!r.ok) throw new Error(r.status === 403 || r.status === 404 ? "o token não tem permissão de escrita neste repositório" : "erro " + r.status);
-        ls.set(TOKEN, token); ls.del(DRAFT);
+        ls.set(TOKEN, token); ls.del(DRAFT); campo.value = ""; campo.hidden = true;
         msg.textContent = "✅ Publicado! Em 1–3 minutos todo mundo verá as mudanças.";
       } catch (err) {
         if (String(err.message).includes("token")) ls.del(TOKEN);
