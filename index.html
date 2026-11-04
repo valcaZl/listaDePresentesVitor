@@ -93,6 +93,20 @@
     .card h2 { font-size: 1rem; font-weight: 600; margin: 0; line-height: 1.35; }
     .card .cor { font-size: .85rem; color: var(--muted); margin: 0; }
     .card .desc { font-size: .875rem; color: var(--muted); margin: 0; }
+    .card { position: relative; }
+    .card.fav { border-color: var(--accent); }
+    .fav-badge {
+      position: absolute; top: 12px; left: 12px; z-index: 1;
+      background: var(--accent); color: var(--accent-ink);
+      font-size: .75rem; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .nota {
+      margin: 4px 0 0; padding: 10px 12px; border-radius: 10px;
+      background: var(--chip); border-left: 3px solid var(--accent);
+      font-size: .85rem; color: var(--ink); white-space: pre-line;
+    }
+    .nota strong { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
     .price { font-family: Fraunces, serif; font-size: 1.35rem; font-weight: 700; margin-top: auto; padding-top: 4px; }
     .price small { display: block; font-family: Inter, sans-serif; font-size: .7rem; font-weight: 400; color: var(--muted); }
     .btn {
@@ -134,15 +148,20 @@
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
     function render(cat) {
-      const lista = cat === "Todos" ? PRODUTOS : PRODUTOS.filter(p => p.categoria === cat);
+      const lista = (cat === "Todos" ? PRODUTOS
+        : cat === FAV ? PRODUTOS.filter(p => p.favorito)
+        : PRODUTOS.filter(p => p.categoria === cat))
+        .slice().sort((a, b) => (b.favorito ? 1 : 0) - (a.favorito ? 1 : 0));
       grid.innerHTML = lista.map(p => `
-        <article class="card">
+        <article class="card${p.favorito ? " fav" : ""}">
+          ${p.favorito ? `<span class="fav-badge">★ Favorito</span>` : ""}
           <div class="media"><img src="${esc(p.imagem)}" alt="${esc(p.nome)}" loading="lazy"></div>
           <div class="body">
             <div class="meta"><span class="chip">${esc(p.loja)}</span><span class="chip">${esc(p.categoria)}</span></div>
             <h2>${esc(p.nome)}</h2>
             ${p.cor ? `<p class="cor">Cor: ${esc(p.cor)}</p>` : ""}
             <p class="desc">${esc(p.descricao)}</p>
+            ${p.comentario ? `<p class="nota"><strong>💬 Comentário</strong>${esc(p.comentario)}</p>` : ""}
             ${p.preco ? `<div class="price"><small>preço de referência</small>${brl.format(p.preco)}</div>` : ""}
             <a class="btn" href="${esc(p.link)}" target="_blank" rel="noopener">Ver na loja ↗</a>
           </div>
@@ -151,7 +170,8 @@
       filters.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === cat));
     }
 
-    const cats = ["Todos", ...new Set(PRODUTOS.map(p => p.categoria))];
+    const FAV = "★ Favoritos";
+    const cats = ["Todos", ...(PRODUTOS.some(p => p.favorito) ? [FAV] : []), ...new Set(PRODUTOS.map(p => p.categoria))];
     filters.innerHTML = cats.map(c => `<button type="button" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
     filters.addEventListener("click", e => { const b = e.target.closest("button"); if (b) render(b.dataset.cat); });
     render("Todos");

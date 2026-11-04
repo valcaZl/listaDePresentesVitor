@@ -1,5 +1,7 @@
 // Para adicionar um presente, copie um bloco { ... } e altere os campos.
 // "imagem" pode ser um arquivo da pasta img/ ou um link direto da imagem.
+// "favorito: true" destaca o item com a tag ★ Favorito e o coloca no topo da lista.
+// "comentario" é um texto livre (tamanho, cor preferida, observações...). Deixe "" para não mostrar.
 const PRODUTOS = [
   {
     nome: "Camiseta Feminina Manga Curta Super Cotton",
@@ -10,6 +12,8 @@ const PRODUTOS = [
     imagem: "img/camiseta.jpg",
     descricao: "100% algodão, gramatura alta de 210 g/m², sem transparência, modelagem regular e decote redondo.",
     link: "https://www.hering.com.br/camiseta-feminina-manga-curta-super-cotton-4h1vn10en/p",
+    favorito: false,
+    comentario: "",
   },
   {
     nome: "Regata Masculina Regular em Ribana Canelada",
@@ -20,6 +24,8 @@ const PRODUTOS = [
     imagem: "img/regata.jpg",
     descricao: "Malha de algodão com elastano, ribana canelada, alças largas e shape solto ao corpo.",
     link: "https://www.hering.com.br/regata-masculina-regular-em-ribana-canelada-4ajen10en/p",
+    favorito: false,
+    comentario: "",
   },
   {
     nome: "Tênis New Balance 530 Unisex",
@@ -30,6 +36,8 @@ const PRODUTOS = [
     imagem: "img/newbalance-530.jpg",
     descricao: "Design retrô autêntico com amortecimento para conforto o dia todo.",
     link: "https://www.newbalance.com.br/tenis-new-balance-530-unisex-1366563/p",
+    favorito: false,
+    comentario: "",
   },
   {
     nome: "Calça Nike Tech Knit Oversized Masculina",
@@ -40,6 +48,8 @@ const PRODUTOS = [
     imagem: "https://imgnike-a.akamaihd.net/1300x1300/096606IDA2.jpg",
     descricao: "Malha macia, elástica e antissuor, caimento amplo com articulação nos joelhos e bolsos com zíper.",
     link: "https://www.nike.com.br/calca-nike-tech-knit-oversized-masculina-096606.html",
+    favorito: false,
+    comentario: "",
   },
   {
     nome: "Calça Esportiva Oversized",
@@ -50,5 +60,7 @@ const PRODUTOS = [
     imagem: "https://assets.adidas.com/images/w_1000,f_auto,q_auto/644ddd68d08046c89f891b790da473e7_9366/CALCA_ESPORTIVA_OVERSIZED_Preto_KS7530_21_model.jpg",
     descricao: "Inspirada na coleção Adicolor Classic Sport, com visual atemporal e conforto para o dia a dia.",
     link: "https://www.adidas.com.br/calca-esportiva-oversized/KS7530.html",
+    favorito: false,
+    comentario: "",
   },
 ];
