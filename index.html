@@ -101,26 +101,6 @@
       font-size: .75rem; font-weight: 700; padding: 5px 10px; border-radius: 999px;
       box-shadow: 0 2px 8px rgba(0,0,0,.2);
     }
-    .nota {
-      margin: 4px 0 0; padding: 10px 12px; border-radius: 10px;
-      background: var(--chip); border-left: 3px solid var(--accent);
-      font-size: .85rem; color: var(--ink); white-space: pre-line;
-    }
-    .fav-toggle {
-      position: absolute; top: 10px; right: 10px; z-index: 2;
-      width: 40px; height: 40px; border-radius: 999px; border: 0; cursor: pointer;
-      background: rgba(255,255,255,.92); color: #c2410c; font-size: 1.3rem; line-height: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,.2);
-    }
-    .fav-toggle[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
-    .nota-input {
-      width: 100%; min-height: 64px; resize: vertical; font: inherit; font-size: .85rem;
-      padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
-      background: var(--chip); color: var(--ink);
-    }
-    .nota-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
-    .nota-label { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-    .nota strong { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
     .price { font-family: Fraunces, serif; font-size: 1.35rem; font-weight: 700; margin-top: auto; padding-top: 4px; }
     .price small { display: block; font-family: Inter, sans-serif; font-size: .7rem; font-weight: 400; color: var(--muted); }
     .btn {
@@ -131,22 +111,6 @@
     .btn:hover { filter: brightness(1.08); }
     .btn:focus-visible, .filters button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-    .editbar {
-      position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10;
-      width: min(720px, calc(100% - 32px)); display: flex; gap: 12px; align-items: center; justify-content: space-between;
-      background: var(--surface); border: 1px solid var(--accent); border-radius: 14px; padding: 10px 12px 10px 16px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.3); font-size: .875rem;
-    }
-    .editbar[hidden], .editbar input[hidden] { display: none; }
-    .editbar { flex-wrap: wrap; }
-    #editmsg { flex: 1 1 100%; }
-    .editbar input {
-      flex: 1 1 260px; min-width: 0; font: inherit; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid var(--accent); background: var(--chip); color: var(--ink);
-    }
-    .editbar .btn { flex-shrink: 0; border: 0; cursor: pointer; font: inherit; font-weight: 600; }
-    body.editando main { padding-bottom: 90px; }
-    @media (max-width: 520px) { .editbar { flex-direction: column; align-items: stretch; } }
     footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; text-align: center; }
   </style>
 </head>
@@ -170,61 +134,28 @@
 
   <footer>Feito com carinho · os preços são apenas referência e podem mudar na loja.</footer>
 
-  <div class="editbar" id="editbar" hidden>
-    <span id="editmsg">✏️ Modo de edição — marque favoritos e escreva como quer cada produto.</span>
-    <input type="password" id="tokenInput" placeholder="Cole aqui o token do GitHub (github_pat_...)" autocomplete="off" hidden>
-    <button type="button" class="btn" id="publicar">Publicar para todos</button>
-  </div>
-
   <script src="produtos.js"></script>
   <script>
     const grid = document.getElementById("grid");
     const filters = document.getElementById("filters");
     const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-    // Modo de edição: abra o site com #editar no final do endereço.
-    const EDITAR = location.hash === "#editar";
-    const REPO = "valcaZl/listaDePresentesVitor";
-    const DRAFT = "listaVitorRascunho", TOKEN = "listaVitorToken";
-    const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-                 set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
-                 del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
-
-    if (EDITAR) {
-      try {
-        const r = JSON.parse(ls.get(DRAFT)) || {};
-        PRODUTOS.forEach(p => { if (r[p.nome]) Object.assign(p, r[p.nome]); });
-      } catch (e) {}
-      document.getElementById("editbar").hidden = false;
-      document.body.classList.add("editando");
-    }
-    const guardarRascunho = () => ls.set(DRAFT, JSON.stringify(
-      Object.fromEntries(PRODUTOS.map(p => [p.nome, { favorito: !!p.favorito, comentario: p.comentario || "" }]))));
-
-    let catAtual = "Todos";
     const FAV = "★ Favoritos";
 
     function render(cat) {
-      catAtual = cat;
       const lista = (cat === "Todos" ? PRODUTOS
         : cat === FAV ? PRODUTOS.filter(p => p.favorito)
         : PRODUTOS.filter(p => p.categoria === cat))
         .slice().sort((a, b) => (b.favorito ? 1 : 0) - (a.favorito ? 1 : 0));
       grid.innerHTML = lista.map(p => `
-        <article class="card${p.favorito ? " fav" : ""}" data-nome="${esc(p.nome)}">
+        <article class="card${p.favorito ? " fav" : ""}">
           ${p.favorito ? `<span class="fav-badge">★ Favorito</span>` : ""}
-          ${EDITAR ? `<button type="button" class="fav-toggle" aria-pressed="${!!p.favorito}" title="Marcar como favorito">${p.favorito ? "★" : "☆"}</button>` : ""}
           <div class="media"><img src="${esc(p.imagem)}" alt="${esc(p.nome)}" loading="lazy"></div>
           <div class="body">
             <div class="meta"><span class="chip">${esc(p.loja)}</span><span class="chip">${esc(p.categoria)}</span></div>
             <h2>${esc(p.nome)}</h2>
             ${p.cor ? `<p class="cor">Cor: ${esc(p.cor)}</p>` : ""}
             <p class="desc">${esc(p.descricao)}</p>
-            ${EDITAR
-              ? `<label class="nota-label">💬 Como eu quero</label>
-                 <textarea class="nota-input" placeholder="Ex.: tamanho M, cor preta, se não tiver pode ser branca...">${esc(p.comentario)}</textarea>`
-              : p.comentario ? `<p class="nota"><strong>💬 Como eu quero</strong>${esc(p.comentario)}</p>` : ""}
             ${p.preco ? `<div class="price"><small>preço de referência</small>${brl.format(p.preco)}</div>` : ""}
             <a class="btn" href="${esc(p.link)}" target="_blank" rel="noopener">Ver na loja ↗</a>
           </div>
@@ -233,60 +164,7 @@
       filters.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === cat));
     }
 
-    grid.addEventListener("click", e => {
-      const b = e.target.closest(".fav-toggle"); if (!b) return;
-      const p = PRODUTOS.find(x => x.nome === b.closest(".card").dataset.nome);
-      p.favorito = !p.favorito; guardarRascunho(); render(catAtual);
-    });
-    grid.addEventListener("input", e => {
-      if (!e.target.matches(".nota-input")) return;
-      PRODUTOS.find(x => x.nome === e.target.closest(".card").dataset.nome).comentario = e.target.value;
-      guardarRascunho();
-    });
-
-    // Gera o novo produtos.js e grava no GitHub.
-    function gerarArquivo() {
-      const cab = [
-        '// Para adicionar um presente, copie um bloco { ... } e altere os campos.',
-        '// "imagem" pode ser um arquivo da pasta img/ ou um link direto da imagem.',
-        '// "favorito: true" destaca o item com a tag ★ Favorito e o coloca no topo da lista.',
-        '// "comentario" é um texto livre (tamanho, cor preferida, observações...). Deixe "" para não mostrar.',
-        '// Dica: abra o site com #editar no final do endereço para editar favoritos e comentários pela página.',
-        ''].join("\n");
-      const campos = ["nome", "cor", "loja", "categoria", "preco", "imagem", "descricao", "link", "favorito", "comentario"];
-      const blocos = PRODUTOS.map(p => "  {\n" + campos.map(k => `    ${k}: ${JSON.stringify(k === "favorito" ? !!p[k] : (p[k] ?? ""))},`).join("\n") + "\n  },");
-      return cab + "const PRODUTOS = [\n" + blocos.join("\n") + "\n];\n";
-    }
-    const b64 = s => { let bin = ""; new TextEncoder().encode(s).forEach(c => bin += String.fromCharCode(c)); return btoa(bin); };
-    const msg = document.getElementById("editmsg");
-
-    document.getElementById("publicar").addEventListener("click", async () => {
-      const campo = document.getElementById("tokenInput");
-      let token = ls.get(TOKEN) || campo.value.trim();
-      if (!token) {
-        campo.hidden = false; campo.focus();
-        msg.textContent = "Cole o token no campo ao lado e clique em Publicar de novo.";
-        return;
-      }
-      const api = `https://api.github.com/repos/${REPO}/contents/produtos.js`;
-      const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" };
-      msg.textContent = "Publicando...";
-      try {
-        const atual = await fetch(api + "?ref=main", { headers, cache: "no-store" });
-        if (!atual.ok) throw new Error(atual.status === 401 ? "token inválido" : "erro " + atual.status);
-        const { sha } = await atual.json();
-        const r = await fetch(api, { method: "PUT", headers, body: JSON.stringify({
-          message: "Atualiza favoritos e comentários pelo site", content: b64(gerarArquivo()), sha, branch: "main" }) });
-        if (!r.ok) throw new Error(r.status === 403 || r.status === 404 ? "o token não tem permissão de escrita neste repositório" : "erro " + r.status);
-        ls.set(TOKEN, token); ls.del(DRAFT); campo.value = ""; campo.hidden = true;
-        msg.textContent = "✅ Publicado! Em 1–3 minutos todo mundo verá as mudanças.";
-      } catch (err) {
-        if (String(err.message).includes("token")) ls.del(TOKEN);
-        msg.textContent = "❌ Não deu para publicar: " + err.message + ".";
-      }
-    });
-
-    const cats = ["Todos", FAV, ...new Set(PRODUTOS.map(p => p.categoria))];
+    const cats = ["Todos", ...(PRODUTOS.some(p => p.favorito) ? [FAV] : []), ...new Set(PRODUTOS.map(p => p.categoria))];
     filters.innerHTML = cats.map(c => `<button type="button" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
     filters.addEventListener("click", e => { const b = e.target.closest("button"); if (b) render(b.dataset.cat); });
     render("Todos");
