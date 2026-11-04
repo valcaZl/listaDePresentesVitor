@@ -36,7 +36,7 @@ const PRODUTOS = [
     imagem: "img/newbalance-530.jpg",
     descricao: "Design retrô autêntico com amortecimento para conforto o dia todo.",
     link: "https://www.newbalance.com.br/tenis-new-balance-530-unisex-1366563/p",
-    favorito: false,
+    favorito: true,
     comentario: "",
   },
   {
@@ -48,7 +48,7 @@ const PRODUTOS = [
     imagem: "https://imgnike-a.akamaihd.net/1300x1300/096606IDA2.jpg",
     descricao: "Malha macia, elástica e antissuor, caimento amplo com articulação nos joelhos e bolsos com zíper.",
     link: "https://www.nike.com.br/calca-nike-tech-knit-oversized-masculina-096606.html",
-    favorito: false,
+    favorito: true,
     comentario: "",
   },
   {
@@ -60,7 +60,7 @@ const PRODUTOS = [
     imagem: "https://assets.adidas.com/images/w_1000,f_auto,q_auto/644ddd68d08046c89f891b790da473e7_9366/CALCA_ESPORTIVA_OVERSIZED_Preto_KS7530_21_model.jpg",
     descricao: "Inspirada na coleção Adicolor Classic Sport, com visual atemporal e conforto para o dia a dia.",
     link: "https://www.adidas.com.br/calca-esportiva-oversized/KS7530.html",
-    favorito: false,
+    favorito: true,
     comentario: "",
   },
 ];
