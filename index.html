@@ -106,6 +106,20 @@
       background: var(--chip); border-left: 3px solid var(--accent);
       font-size: .85rem; color: var(--ink); white-space: pre-line;
     }
+    .fav-toggle {
+      position: absolute; top: 10px; right: 10px; z-index: 2;
+      width: 40px; height: 40px; border-radius: 999px; border: 0; cursor: pointer;
+      background: rgba(255,255,255,.92); color: #c2410c; font-size: 1.3rem; line-height: 1;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .fav-toggle[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+    .nota-input {
+      width: 100%; min-height: 64px; resize: vertical; font: inherit; font-size: .85rem;
+      padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--chip); color: var(--ink);
+    }
+    .nota-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .nota-label { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
     .nota strong { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
     .price { font-family: Fraunces, serif; font-size: 1.35rem; font-weight: 700; margin-top: auto; padding-top: 4px; }
     .price small { display: block; font-family: Inter, sans-serif; font-size: .7rem; font-weight: 400; color: var(--muted); }
@@ -147,21 +161,32 @@
     const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+    const KEY = "listaVitor";
+    let estado = {};
+    try { estado = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+    const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify(estado)); } catch (e) {} };
+    const isFav = p => estado[p.nome]?.fav ?? !!p.favorito;
+    const notaDe = p => estado[p.nome]?.nota ?? (p.comentario || "");
+    let catAtual = "Todos";
+
     function render(cat) {
+      catAtual = cat;
       const lista = (cat === "Todos" ? PRODUTOS
-        : cat === FAV ? PRODUTOS.filter(p => p.favorito)
+        : cat === FAV ? PRODUTOS.filter(isFav)
         : PRODUTOS.filter(p => p.categoria === cat))
-        .slice().sort((a, b) => (b.favorito ? 1 : 0) - (a.favorito ? 1 : 0));
+        .slice().sort((a, b) => (isFav(b) ? 1 : 0) - (isFav(a) ? 1 : 0));
       grid.innerHTML = lista.map(p => `
-        <article class="card${p.favorito ? " fav" : ""}">
-          ${p.favorito ? `<span class="fav-badge">★ Favorito</span>` : ""}
+        <article class="card${isFav(p) ? " fav" : ""}" data-nome="${esc(p.nome)}">
+          ${isFav(p) ? `<span class="fav-badge">★ Favorito</span>` : ""}
+          <button type="button" class="fav-toggle" aria-pressed="${isFav(p)}" title="Marcar como favorito">${isFav(p) ? "★" : "☆"}</button>
           <div class="media"><img src="${esc(p.imagem)}" alt="${esc(p.nome)}" loading="lazy"></div>
           <div class="body">
             <div class="meta"><span class="chip">${esc(p.loja)}</span><span class="chip">${esc(p.categoria)}</span></div>
             <h2>${esc(p.nome)}</h2>
             ${p.cor ? `<p class="cor">Cor: ${esc(p.cor)}</p>` : ""}
             <p class="desc">${esc(p.descricao)}</p>
-            ${p.comentario ? `<p class="nota"><strong>💬 Comentário</strong>${esc(p.comentario)}</p>` : ""}
+            <label class="nota-label">💬 Como eu quero</label>
+            <textarea class="nota-input" placeholder="Ex.: tamanho M, cor preta, se não tiver pode ser branca...">${esc(notaDe(p))}</textarea>
             ${p.preco ? `<div class="price"><small>preço de referência</small>${brl.format(p.preco)}</div>` : ""}
             <a class="btn" href="${esc(p.link)}" target="_blank" rel="noopener">Ver na loja ↗</a>
           </div>
@@ -171,7 +196,17 @@
     }
 
     const FAV = "★ Favoritos";
-    const cats = ["Todos", ...(PRODUTOS.some(p => p.favorito) ? [FAV] : []), ...new Set(PRODUTOS.map(p => p.categoria))];
+    const cats = ["Todos", FAV, ...new Set(PRODUTOS.map(p => p.categoria))];
+    grid.addEventListener("click", e => {
+      const b = e.target.closest(".fav-toggle"); if (!b) return;
+      const p = PRODUTOS.find(x => x.nome === b.closest(".card").dataset.nome);
+      estado[p.nome] = { ...estado[p.nome], fav: !isFav(p) }; salvar(); render(catAtual);
+    });
+    grid.addEventListener("input", e => {
+      if (!e.target.matches(".nota-input")) return;
+      const nome = e.target.closest(".card").dataset.nome;
+      estado[nome] = { ...estado[nome], nota: e.target.value }; salvar();
+    });
     filters.innerHTML = cats.map(c => `<button type="button" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
     filters.addEventListener("click", e => { const b = e.target.closest("button"); if (b) render(b.dataset.cat); });
     render("Todos");
